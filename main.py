@@ -1,7 +1,8 @@
 import torch
 from numpy import mean
 from tqdm import tqdm
-from transformers import logging, AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
+from transformers import logging, AutoTokenizer, AutoModel, get_linear_schedule_with_warmup, AlbertTokenizer, \
+    TFAlbertModel, RobertaTokenizer, RobertaModel
 
 from config import get_config
 from data import load_data
@@ -27,6 +28,12 @@ class Instructor:
         elif args.model_name == 'bert-large':
             self.tokenizer = AutoTokenizer.from_pretrained('bert-large-uncased')
             self.base_model = AutoModel.from_pretrained('bert-large-uncased')
+        elif args.model_name == 'albert-base-v2':
+            self.tokenizer = AutoTokenizer.from_pretrained('albert-base-v2')
+            self.base_model = AutoModel.from_pretrained("albert-base-v2")
+        elif args.model_name == 'roberta-base':
+            self.tokenizer = AutoTokenizer.from_pretrained('roberta-base',add_prefix_space=True)
+            self.base_model = AutoModel.from_pretrained('roberta-base')
         else:
             raise ValueError('unknown model')
         if args.method_name == 'FNN':
@@ -66,6 +73,7 @@ class Instructor:
 
     def _test(self, dataloader, criterion):
         test_loss, n_correct, n_test = 0, 0, 0
+
         self.model.eval()
 
         with torch.no_grad():

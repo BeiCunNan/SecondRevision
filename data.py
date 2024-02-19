@@ -1,25 +1,20 @@
-import os
 import json
-import torch
+import os
 from functools import partial
+
+import torch
 from torch.utils.data import Dataset, DataLoader
 
 
 class DataSet(Dataset):
-    def __init__(self, raw_data, label_dict, subject):
+    def __init__(self, raw_data, label_dict):
         label_list = list(label_dict.keys())
-        split_token = ' [SEP] '
-        QUERY = 'what class in { ' + ' , '.join(label_list) + ' } does this sentence have ?'
-        PROMPT = 'this ' + subject + ' is [MASK] .'
 
         dataset = list()
         for data in raw_data:
             tokens = data['text'].lower().split(' ')
-            mrc_tokens = (data['text'].lower() + split_token + QUERY).split(' ')
-            mask_tokens = (data['text'].lower() + split_token + PROMPT).split(' ')
             label_ids = label_dict[data['label']]
-            dataset.append((mrc_tokens, label_ids, tokens, mask_tokens))
-
+            dataset.append((tokens, label_ids))
         self._dataset = dataset
 
     def __getitem__(self, index):
@@ -31,36 +26,20 @@ class DataSet(Dataset):
 
 # Make tokens for every batch
 def my_collate(batch, tokenizer):
-    mrc_tokens, label_ids, tokens, mask_tokens = map(list, zip(*batch))
+    tokens, label_ids = map(list, zip(*batch))
 
-    mrc_ids = tokenizer(mrc_tokens,
-                        padding=True,
-                        max_length=512,
-                        truncation=True,
-                        is_split_into_words=True,
-                        add_special_tokens=True,
-                        return_tensors='pt')
     text_ids = tokenizer(tokens,
                          padding=True,
-                         max_length=512,
                          truncation=True,
+                         max_length=512,
                          is_split_into_words=True,
                          add_special_tokens=True,
                          return_tensors='pt')
-    mask_ids = tokenizer(mask_tokens,
-                         padding=True,
-                         max_length=512,
-                         truncation=True,
-                         is_split_into_words=True,
-                         add_special_tokens=True,
-                         return_tensors='pt')
-    mask_index = torch.nonzero(mask_ids['input_ids'] == 103, as_tuple=False)
-
-    return mrc_ids, torch.tensor(label_ids), text_ids, mask_ids, mask_index
+    return text_ids, torch.tensor(label_ids)
 
 
 # Load dataset
-def load_data(dataset, data_dir, tokenizer, train_batch_size, test_batch_size,  workers,
+def load_data(dataset, data_dir, tokenizer, train_batch_size, test_batch_size, workers,
               index_fold, subject):
     if dataset == 'sst2':
         train_data = json.load(open(os.path.join(data_dir, 'SST2_Train.json'), 'r', encoding='utf-8'))
@@ -105,8 +84,8 @@ def load_data(dataset, data_dir, tokenizer, train_batch_size, test_batch_size,  
     else:
         raise ValueError('unknown dataset')
 
-    trainset = DataSet(train_data, label_dict, subject)
-    testset = DataSet(test_data, label_dict, subject)
+    trainset = DataSet(train_data, label_dict)
+    testset = DataSet(test_data, label_dict)
 
     collate_fn = partial(my_collate, tokenizer=tokenizer)
     train_dataloader = DataLoader(trainset, train_batch_size, shuffle=True, num_workers=workers, collate_fn=collate_fn,

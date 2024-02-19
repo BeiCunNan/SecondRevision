@@ -20,19 +20,19 @@ def get_config():
     subject = {'sst2': 'movie', 'sst5': 'movie', 'cr': 'product', 'subj': 'opinion', 'mr': 'movie', 'trec': 'question',
                'mpqa': 'opinion', 'ie': 'idiom'}
     parser.add_argument('--prompt_lengths', type=int, default=5)
-    parser.add_argument('--dataset', type=str, default='ie', choices=num_classes.keys())
-    parser.add_argument('--max_lengths', type=str, default='ie', choices=max_lengths.keys())
-    parser.add_argument('--query_lengths', type=str, default='ie', choices=query_lengths.keys())
-    parser.add_argument('--subject', type=str, default='ie', choices=subject.keys())
-    parser.add_argument('--model_name', type=str, default='bert-base',
-                        choices=['bert-base', 'bert-large'])
+    parser.add_argument('--dataset', type=str, default='sst2', choices=num_classes.keys())
+    parser.add_argument('--max_lengths', type=str, default='sst2', choices=max_lengths.keys())
+    parser.add_argument('--query_lengths', type=str, default='sst2', choices=query_lengths.keys())
+    parser.add_argument('--subject', type=str, default='sst2', choices=subject.keys())
+    parser.add_argument('--model_name', type=str, default='albert-base-v2',
+                        choices=['bert-base', 'bert-large', 'roberta-base', 'albert-base-v2'])
     parser.add_argument('--method_name', type=str, default='FNN',
-                        choices=['MP-TFWA','FNN'])
+                        choices=['MP-TFWA', 'FNN'])
 
     '''Optimization'''
-    parser.add_argument('--train_batch_size', type=int, default=6)
+    parser.add_argument('--train_batch_size', type=int, default=16)
     parser.add_argument('--test_batch_size', type=int, default=32)
-    parser.add_argument('--num_epoch', type=int, default=10)
+    parser.add_argument('--num_epoch', type=int, default=100)
     parser.add_argument('--lr', type=float, default=1e-5)
     parser.add_argument('--decay', type=float, default=0.01)
     parser.add_argument('--eps', type=float, default=1e-8)

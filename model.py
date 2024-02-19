@@ -1,7 +1,3 @@
-import math
-
-import torch
-import torch.nn.functional as F
 from torch import nn
 
 
@@ -12,7 +8,8 @@ class FNN(nn.Module):
         self.num_classes = num_classes
         self.fc = nn.Sequential(
             nn.Dropout(0.5),
-            nn.Linear(self.base_model.config.hidden_size, num_classes)
+            nn.Linear(self.base_model.config.hidden_size, 100),
+            nn.Linear(100, num_classes)
         )
         for param in base_model.parameters():
             param.requires_grad = (True)
